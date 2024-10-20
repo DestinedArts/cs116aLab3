@@ -24,6 +24,7 @@ public:
 //
 class SceneObject {
 public:
+	virtual ~SceneObject() = default;
 	virtual void draw() = 0;    // pure virtual funcs - must be overloaded
 	virtual bool intersect(const Ray& ray, glm::vec3& point, glm::vec3& normal) { return false; }
 	virtual glm::vec3 getNormal(const glm::vec3& p) { return glm::vec3(1, 0, 0); }
@@ -74,9 +75,11 @@ public:
 
 	void draw() {
 		//	ofDrawSphere(position, radius); 
+		ofPushMatrix();
+		ofMultMatrix(getMatrix());
 		spherePrim.setRadius(radius);
-		spherePrim.setPosition(position);
 		spherePrim.draw();
+		ofPopMatrix();
 	}
 
 	float radius = 1.0;
@@ -219,9 +222,13 @@ class ofApp : public ofBaseApp{
 		bool bHide = true;
 		bool bAltKeyDown = false;
 		bool bSftKeyDown = false;
+		bool bCtrlKeyDown = false;
 		bool bRotateX = false;
 		bool bRotateY = false;
 		bool bRotateZ = false;
+		bool bScaleX = false;
+		bool bScaleY = false;
+		bool bScaleZ = false;
 		glm::vec3 lastPoint;
 
 };

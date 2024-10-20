@@ -164,7 +164,7 @@ void ofApp::setup(){
 
 	// setup simple scene
 	//
-	scene.push_back(new Plane(glm::vec3(0, 0, 0), glm::vec3(0, 1, 0), ofColor::darkGreen));
+	scene.push_back(new Plane(glm::vec3(0, -1, 0), glm::vec3(0, 1, 0), ofColor::darkGreen));
 
 	// setup one point light
 	// 
@@ -183,7 +183,11 @@ void ofApp::setup(){
 
 //--------------------------------------------------------------
 void ofApp::update(){
-
+	// rotate the object when selected
+	if (objSelected())
+		selected[0]->rotation.x += 1.0;	// rotates on its x-axis
+	// selected[0]->rotation.y += 1.0;	// rotates on its y-axis
+	// selected[0]->rotation.z += 1.0;	// rotates on its z-axis
 }
 
 //--------------------------------------------------------------
@@ -241,6 +245,7 @@ void ofApp::keyPressed(int key) {
 	case 'p':
 	{
 		Pyramid* pyramid = new Pyramid();
+		// pyramid->scale = glm::vec3(5, 1, 1);
 		scene.push_back(pyramid);
 		break;
 	}
@@ -274,15 +279,21 @@ void ofApp::keyPressed(int key) {
 	case OF_KEY_F4:
 		theCam = &previewCam;
 		break;
-	case OF_KEY_ALT:
+	case OF_KEY_ALT:		// was not working in openframeworks11, now works in 12
 		bAltKeyDown = true;
 		if (!mainCam.getMouseInputEnabled()) mainCam.enableMouseInput();
 		break;
 	case OF_KEY_SHIFT:
 		bSftKeyDown = true;
 		break;
+	case OF_KEY_CONTROL:
+		bCtrlKeyDown = true;
+		break;
 	case OF_KEY_BACKSPACE:
-		if (objSelected()) removeObject(selected[0]);
+		if (objSelected()) {
+			removeObject(selected[0]);
+			clearSelectionList();
+		}
 		break;
 	default:
 		break;
@@ -295,6 +306,9 @@ void ofApp::keyReleased(int key){
 		case OF_KEY_ALT:
 			bAltKeyDown = false;
 			mainCam.disableMouseInput();
+			break;
+		case OF_KEY_CONTROL:
+			bCtrlKeyDown = false;
 			break;
 		case 'x':
 			bRotateX = false;
@@ -419,10 +433,6 @@ void ofApp::mousePressed(int x, int y, int button) {
 	//
 	if (!bSftKeyDown) clearSelectionList();
 
-	//
-	// test if something selected
-	//
-	vector<SceneObject*> hits;
 
 	glm::vec3 p = theCam->screenToWorld(glm::vec3(x, y, 0));
 	glm::vec3 d = p - theCam->getPosition();
@@ -430,32 +440,27 @@ void ofApp::mousePressed(int x, int y, int button) {
 
 	// check for selection of scene objects
 	//
+	SceneObject* selectedObj = NULL;
+
 	for (int i = 0; i < scene.size(); i++) {
 
 		glm::vec3 point, norm;
 
-		//  We hit an object
+		float nearestDist = std::numeric_limits<float>::infinity();
+
+		// it is possible to hit multple objects with one mouse ray. If so , select
+		// the closet one.
 		//
 		if (scene[i]->isSelectable && scene[i]->intersect(Ray(p, dn), point, norm)) {
-			hits.push_back(scene[i]);
-		}
-	}
-
-
-	// if we selected more than one, pick nearest
-	//
-	SceneObject* selectedObj = NULL;
-	if (hits.size() > 0) {
-		selectedObj = hits[0];
-		float nearestDist = std::numeric_limits<float>::infinity();
-		for (int n = 0; n < hits.size(); n++) {
-			float dist = glm::length(hits[n]->position - theCam->getPosition());
+			selectedObj = scene[i];
+			float dist = glm::length(point - theCam->getPosition());
 			if (dist < nearestDist) {
 				nearestDist = dist;
-				selectedObj = hits[n];
+				selectedObj = scene[i];
 			}
 		}
 	}
+
 	if (selectedObj) {
 		selectedObj->isSelected = true;
 		selected.push_back(selectedObj);

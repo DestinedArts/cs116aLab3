@@ -23,5 +23,9 @@ random notes taken during class
 
 use simple numbers then scale up
 
+[realtimerendering.com](https://www.realtimerendering.com/)
+* algorithms for ray shaped intersection testing
+* ex: boxes
+
 ### TO-DO:
 * make an abstract/inherit class for primitive classes
